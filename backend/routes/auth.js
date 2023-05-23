@@ -3,7 +3,7 @@ const User = require('../models/User');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { body, validationResult } = require('express-validator');
-const fetchuser = require('../middleware/fetchuser');
+const auth = require('../middleware/fetchuser');
 const multer = require('multer');
 const storage = require('../middleware/fetchmedia');
 
@@ -52,10 +52,7 @@ router.post('/createuser', upload.single('media'), [
 
     // Create the user
     user = await User.create({
-      image: {
-        data: req.file.filename,
-        contentType: req.file.mimetype
-      },
+      image: req.file.path,
       username: req.body.username,
       fullname: req.body.fullname,
       email: req.body.email,
@@ -121,7 +118,7 @@ router.post('/loginuser', [
 });
 
 // Route: Get logged-in user details
-router.get('/getuser', fetchuser, async (req, res) => {
+router.get('/getuser', auth, async (req, res) => {
   try {
     const userId = req.user.id;
     const user = await User.findById(userId).select('-password');
@@ -133,7 +130,7 @@ router.get('/getuser', fetchuser, async (req, res) => {
 });
 
 // Route: Update user details
-router.put('/updateuser', fetchuser,upload.single('media'),
+router.put('/updateuser', auth, upload.single('media'),
 async (req, res) => {
   try {
     const { username, fullname, email } = req.body;
@@ -158,8 +155,7 @@ async (req, res) => {
       }
 
       // Update the user's image
-      user.image.data = req.file.filename;
-      user.image.contentType = req.file.mimetype;
+      user.image = req.file.path;
     }  
 
     user = await user.save();
@@ -172,7 +168,7 @@ async (req, res) => {
 });
 
 // Route: Change Password
-router.put('/changepassword', fetchuser, [
+router.put('/changepassword', auth, [
   body('oldPassword', 'Old password is required').notEmpty(),
   body('newPassword', 'New password is required').isLength({ min: 5 })
 ], async (req, res) => {
@@ -224,7 +220,7 @@ router.get('/getallusers', async (req, res) => {
 });
 
 // Route: Delete user
-router.delete('/deleteuser', fetchuser, async (req, res) => {
+router.delete('/deleteuser', auth, async (req, res) => {
   try {
     const userId = req.user.id;
 

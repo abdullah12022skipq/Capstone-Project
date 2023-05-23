@@ -9,188 +9,128 @@ const storage = require('../middleware/fetchmedia');
 
 const upload = multer({ storage: storage('uploads/stories') });
 
-// Create a new story with file upload support
-router.post('/stories', auth, upload.single('media'), [
-  body('description').optional().trim(),
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    let mediaType = 'text'; // Default media type is text
-
-    if (req.file) {
-      // Determine media type based on the file mimetype
-      if (req.file.mimetype.startsWith('image/')) {
-        mediaType = 'image';
-      } else if (req.file.mimetype.startsWith('video/')) {
-        mediaType = 'video';
-      }
-    }
-
-    const newStory = new Story({
-      description: req.body.description || '',
-      media: {
-        type: mediaType,
-        data: req.file ? req.file.filename : undefined,
-        contentType: req.file ? req.file.mimetype : undefined
-      },
-      user: req.user.id
-    });
-
-    await newStory.save();
-    res.json(newStory);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send('Internal Server Error');
-  }
-});
-// Update a Specific Media Story
-router.put('/stories/:storyId', auth, upload.single('media'), [
-  body('description').optional().trim(),
-], async (req, res) => {
-  try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { description } = req.body;
-    const { file } = req;
-
-    const updatedFields = { description };
-
-    if (file) {
-      let mediaType = 'text'; // Default media type is text
-
-      // Determine media type based on the file mimetype
-      if (file.mimetype.startsWith('image/')) {
-        mediaType = 'image';
-      } else if (file.mimetype.startsWith('video/')) {
-        mediaType = 'video';
+// Create a new post
+router.post(
+  '/stories',
+  auth, // Assuming you have an 'auth' middleware for authentication
+  upload.single('media'),
+  [
+    body('description').optional().trim(),
+    body('text').optional().trim()
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
       }
 
-      updatedFields.media = {
-        type: mediaType,
-        data: file.filename,
-        contentType: file.mimetype
-      };
+      // Extract post data from the request body
+      const { text, description } = req.body;
+      const media = req.file ? req.file.path : null;
+
+      // Validate that the story contains either text or media, not both
+      if ((text && media) || (!text && !media)) {
+        return res.status(400).json({ success: false, message: 'A story must contain either text or media' });
+      }
+
+      // Create a new Story object
+      const newStory = new Story({
+        text: text ? text : null,
+        media: media ? media : null,
+        description
+      });
+
+      // Save the post to the database
+      await newStory.save();
+      res.json(newStory);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send('Internal Server Error');
     }
-
-    const updatedStory = await Story.findByIdAndUpdate(
-      req.params.storyId,
-      updatedFields,
-      { new: true }
-    ).populate('user', ['username']);
-
-    if (!updatedStory) {
-      return res.status(404).json({ error: 'Story not found' });
-    }
-
-    res.json(updatedStory);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Internal Server Error');
   }
-});
+);
 
-router.post('/textstories', auth, [
-  body('text', 'Text is required').trim().notEmpty(),
-  body('description').optional().trim()
-], async (req, res) => {
+// Get all stories
+router.get('/stories', async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { text, description } = req.body;
-
-    const newStory = new Story({
-      description: description || '', // If description is not provided, set it to an empty string
-      text,
-      user: req.user.id
-    });
-
-    await newStory.save();
-
-    res.json(newStory);
+    const stories = await Story.find();
+    res.json(stories);
   } catch (err) {
     console.error(err);
     res.status(500).send('Internal Server Error');
   }
 });
 
-// Update a Specific Story
-router.put('/textstories/:storyId', auth, async (req, res) => {
+// Get a specific story
+router.get('/stories/:storyId', async (req, res) => {
   try {
+    const { storyId } = req.params;
+    const story = await Story.findById(storyId);
+    if (!story) {
+      return res.status(404).json({ success: false, message: 'Story not found' });
+    }
+    res.json(story);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+// Update a specific story
+router.put('/stories/:storyId', auth, upload.single('media'), async (req, res) => {
+  try {
+    const { storyId } = req.params;
     const { text, description } = req.body;
+    const media = req.file ? req.file.path : null;
+
+    // Validate that the story contains either text or media, not both
+    if ((text && media) || (!text && !media)) {
+      return res.status(400).json({ success: false, message: 'A story must contain either text or media' });
+    }
+
     const updatedFields = {};
 
     if (text) {
       updatedFields.text = text;
+      updatedFields.media = null;
+    }
+
+    else {
+      updatedFields.text = null;
+      updatedFields.media = media;
     }
 
     if (description) {
       updatedFields.description = description;
+    } else {
+      updatedFields.description = '';
     }
 
-    const updatedStory = await Story.findByIdAndUpdate(
-      req.params.storyId,
-      updatedFields,
-      { new: true }
-    ).populate('user', ['username']);
+    const updatedStory = await Story.findByIdAndUpdate(storyId, updatedFields, { new: true });
 
     if (!updatedStory) {
-      return res.status(404).json({ error: 'Story not found' });
+      return res.status(404).json({ success: false, message: 'Story not found' });
     }
 
     res.json(updatedStory);
   } catch (err) {
-    console.error(err.message);
+    console.error(err);
     res.status(500).send('Internal Server Error');
   }
 });
 
-// get all stories
-router.get('/stories', async (req, res) => {
-  try {
-    const stories = await Story.find().populate('user', ['username']);
-    res.json(stories);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-// Get a Specific Story
-router.get('/stories/:storyId', async (req, res) => {
-  try {
-    const story = await Story.findById(req.params.storyId).populate('user', ['username']);
-    if (!story) {
-      return res.status(404).json({ error: 'Story not found' });
-    }
-    res.json(story);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Internal Server Error');
-  }
-});
-
-// Delete a Specific Story
+// Delete a specific story
 router.delete('/stories/:storyId', auth, async (req, res) => {
   try {
-    const deletedStory = await Story.findByIdAndRemove(req.params.storyId);
-
+    const { storyId } = req.params;
+    const deletedStory = await Story.findByIdAndDelete(storyId);
     if (!deletedStory) {
-      return res.status(404).json({ error: 'Story not found' });
+      return res.status(404).json({ success: false, message: 'Story not found' });
     }
-
-    res.json({ message: 'Story deleted successfully' });
+    res.json({ success: true, message: 'Story deleted successfully' });
   } catch (err) {
-    console.error(err.message);
+    console.error(err);
     res.status(500).send('Internal Server Error');
   }
 });
