@@ -23,12 +23,22 @@ router.post('/comments/:storyId', auth, [
     });
 
     await newComment.save();
+
+    // Find the story and add the comment reference to the comments array
+    const story = await Story.findById(req.params.storyId);
+    if (!story) {
+      return res.status(404).json({ success: false, message: 'Story not found' });
+    }
+    story.comments.push(newComment._id);
+    await story.save();
+
     res.json(newComment);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Internal Server Error');
   }
 });
+
 
 // Get all comments of a story
 router.get('/comments/:storyId', async (req, res) => {
@@ -52,14 +62,15 @@ router.put('/comments/:commentId', auth, [
     }
 
     const { text } = req.body;
-    const updatedComment = await Comment.findByIdAndUpdate(
-      req.params.commentId,
+
+    const updatedComment = await Comment.findOneAndUpdate(
+      { _id: req.params.commentId, user: req.user.id },
       { text },
       { new: true }
     ).populate('user', ['username']);
 
     if (!updatedComment) {
-      return res.status(404).json({ error: 'Comment not found' });
+      return res.status(404).json({ error: 'Comment not found or you are not authorized to update this comment' });
     }
 
     res.json(updatedComment);
@@ -72,11 +83,24 @@ router.put('/comments/:commentId', auth, [
 // Delete a comment
 router.delete('/comments/:commentId', auth, async (req, res) => {
   try {
-    const deletedComment = await Comment.findByIdAndRemove(req.params.commentId);
+    const { commentId } = req.params;
+
+    const deletedComment = await Comment.findOneAndDelete({ _id: commentId, user: req.user.id });
 
     if (!deletedComment) {
-      return res.status(404).json({ error: 'Comment not found' });
+      return res.status(404).json({ error: 'Comment not found or you are not authorized to delete this comment' });
     }
+
+    const storyId = deletedComment.story;
+    const story = await Story.findById(storyId);
+
+    if (!story) {
+      return res.status(404).json({ success: false, message: 'Story not found' });
+    }
+
+    // Remove the comment reference from the story's comments array
+    story.comments.pull(commentId);
+    await story.save();
 
     res.json({ message: 'Comment deleted successfully' });
   } catch (err) {
@@ -84,5 +108,6 @@ router.delete('/comments/:commentId', auth, async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
 
 module.exports = router;

@@ -1,70 +1,67 @@
-# Getting Started with Create React App
+##Digital Media App - Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+**This is the frontend repository for the Digital Media App. All the UI is designed in React. The frontend is responsible for user friendly UI or how a user interacts with the app**
 
-## Available Scripts
+* Getting Started
+        Prerequisites
+        Installation
+* Features
+* Usage
+* Contributing
+* License
 
-In the project directory, you can run:
+##Getting Started
+###Prerequisites
 
-### `npm start`
+Before you begin, ensure you have met the following requirements:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+* Node.js and npm installed on your development environment.
+* A compatible web browser (e.g., Chrome, Firefox, Safari).
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+###Installation
 
-### `npm test`
+1. Clone the repository to your local machine:
+	git clone https://github.com/your-username/Capstone-Project.git
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+2. Change your working directory to the project folder:
+	cd frontend
 
-### `npm run build`
+3. Install the project dependencies using npm:
+	npm install
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+4. Start the development server:
+	npm start
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+This will launch the app in your default web browser. If it doesn't, open your browser and navigate to http://localhost:3000.
+But first you have to run the backend for interacting. Go to the Backend folder and check ReadMe file
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+##Features
 
-### `npm run eject`
+* **User Authentication:** Users can sign up and log in to the app to create and manage their profiles.
+* **Post Creation:** Users can create posts containing images, videos, or text.
+* **Post Interactions:** Users can like, dislike, and comment on posts.
+* **User Profile:** Users have profiles where they can view their own posts and posts they have interacted with.
+* **Search Functionality:** Users can search for posts or users by keywords.
+* **Responsive Design:** The app is designed to work seamlessly on both desktop and mobile devices.
+* **Protected Routes:** Certain routes, such as creating a post, are protected and require authentication.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+#Usage
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+1. **Sign Up:** Start by signing up for an account if you're a new user.
+2. **Log In:** If you already have an account, log in using your credentials.
+3. **Create a Post:** Once logged in, you can create a new post. Choose whether to upload an image, video, or write a text-based post.
+4. **Interact with Posts:** You can like, dislike, and comment on posts created by other users.
+5. **View User Profile:** Click on a user's profile picture or name to view their profile and posts.
+6. **Post Ranking:** You can view top 10 most liked, disliked or commented posts
+7. **User Ranking:** You can view top 10 most interacted account
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+##Contributing
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+We welcome contributions from the community. If you'd like to contribute to this project, please follow these guidelines:
 
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+1. Fork the repository and clone it to your local machine.
+2. Create a new branch for your feature or bug fix.
+3. Make your changes and ensure they adhere to the coding style.
+4. Test your changes thoroughly.
+5. Push your changes to your forked repository.
+6. Create a pull request with a clear description of your changes.

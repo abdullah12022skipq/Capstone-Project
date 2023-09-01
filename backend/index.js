@@ -1,10 +1,15 @@
 const connectToMongo = require("./mongodb")
 const express = require('express')
 const bodyParser = require('body-parser');
+const cors = require('cors');
 
 connectToMongo();
 const app = express()
 const port = 5000
+
+app.use(cors({
+  origin: 'http://localhost:3000',
+}));
 
 // Increase payload size limit to 10MB
 app.use(bodyParser.json({ limit: '10mb' }));

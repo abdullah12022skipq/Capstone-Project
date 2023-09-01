@@ -2,21 +2,22 @@ const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const auth = require('../middleware/fetchuser');
+const User = require('../models/User');
 const Story = require('../models/Story');
+const Like = require('../models/Like')
 
 const multer = require('multer');
 const storage = require('../middleware/fetchmedia');
 
 const upload = multer({ storage: storage('uploads/stories') });
 
-// Create a new post
+// Create a new story
 router.post(
   '/stories',
-  auth, // Assuming you have an 'auth' middleware for authentication
+  auth,
   upload.single('media'),
   [
-    body('description').optional().trim(),
-    body('text').optional().trim()
+    body('text').optional().trim(),
   ],
   async (req, res) => {
     try {
@@ -25,36 +26,46 @@ router.post(
         return res.status(400).json({ errors: errors.array() });
       }
 
-      // Extract post data from the request body
-      const { text, description } = req.body;
-      const media = req.file ? req.file.path : null;
-
-      // Validate that the story contains either text or media, not both
-      if ((text && media) || (!text && !media)) {
+      if (!req.body.text && !req.file) {
         return res.status(400).json({ success: false, message: 'A story must contain either text or media' });
+      }
+
+      // Extract post data from the request body
+      const { text } = req.body;
+      const media = req.file ? req.file.path : null;
+      const userId = req.user.id;
+
+      // Find the user who is creating the story
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
       }
 
       // Create a new Story object
       const newStory = new Story({
         text: text ? text : null,
         media: media ? media : null,
-        description
+        user: user._id, // Assign the reference to the user
       });
 
-      // Save the post to the database
+      // Save the story to the database
       await newStory.save();
+
+      // Add the story reference to the user's stories array
+      user.stories.push(newStory._id);
+      await user.save();
+
       res.json(newStory);
     } catch (err) {
-      console.error(err);
-      res.status(500).send('Internal Server Error');
+        return res.status(500).json({ success: false, message: 'Internal Server Error' });
+      }
     }
-  }
 );
 
 // Get all stories
 router.get('/stories', async (req, res) => {
   try {
-    const stories = await Story.find();
+    const stories = await Story.find().populate('comments', 'user');
     res.json(stories);
   } catch (err) {
     console.error(err);
@@ -62,14 +73,42 @@ router.get('/stories', async (req, res) => {
   }
 });
 
+// Get all stories of a specific user
+router.get('/users/stories/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    // Find the user by their ID
+    const user = await User.findById(userId).populate('stories');
+    
+    if (!user) {
+      // User not found
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Access the user's stories
+    const stories = user.stories;
+    
+    res.json(stories);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
 // Get a specific story
 router.get('/stories/:storyId', async (req, res) => {
   try {
     const { storyId } = req.params;
-    const story = await Story.findById(storyId);
+
+    const story = await Story.findById(storyId)
+      .populate('user', ['username'])
+
     if (!story) {
       return res.status(404).json({ success: false, message: 'Story not found' });
     }
+
     res.json(story);
   } catch (err) {
     console.error(err);
@@ -77,40 +116,38 @@ router.get('/stories/:storyId', async (req, res) => {
   }
 });
 
+
 // Update a specific story
 router.put('/stories/:storyId', auth, upload.single('media'), async (req, res) => {
   try {
     const { storyId } = req.params;
-    const { text, description } = req.body;
+    const { text } = req.body;
     const media = req.file ? req.file.path : null;
 
     // Validate that the story contains either text or media, not both
-    if ((text && media) || (!text && !media)) {
+    if ((!text && !media)) {
       return res.status(400).json({ success: false, message: 'A story must contain either text or media' });
     }
 
     const updatedFields = {};
 
-    if (text) {
+    if (text && media) {
+      updatedFields.text = text;
+      updatedFields.media = media;
+    }
+    else if (text) {
       updatedFields.text = text;
       updatedFields.media = null;
     }
-
     else {
       updatedFields.text = null;
       updatedFields.media = media;
     }
 
-    if (description) {
-      updatedFields.description = description;
-    } else {
-      updatedFields.description = '';
-    }
-
-    const updatedStory = await Story.findByIdAndUpdate(storyId, updatedFields, { new: true });
+    const updatedStory = await Story.findOneAndUpdate({ _id: storyId, user: req.user.id }, updatedFields, { new: true });
 
     if (!updatedStory) {
-      return res.status(404).json({ success: false, message: 'Story not found' });
+      return res.status(404).json({ success: false, message: 'Story not found or you are not authorized to update this story' });
     }
 
     res.json(updatedStory);
@@ -124,10 +161,26 @@ router.put('/stories/:storyId', auth, upload.single('media'), async (req, res) =
 router.delete('/stories/:storyId', auth, async (req, res) => {
   try {
     const { storyId } = req.params;
-    const deletedStory = await Story.findByIdAndDelete(storyId);
+
+    const deletedStory = await Story.findOneAndDelete({ _id: storyId, user: req.user.id });
+    
     if (!deletedStory) {
-      return res.status(404).json({ success: false, message: 'Story not found' });
+      return res.status(404).json({ success: false, message: 'Story not found or you are not authorized to delete this story' });
     }
+
+    const userId = deletedStory.user;
+    
+    // Find the user by their ID
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Remove the story reference from the user's stories array
+    user.stories.pull(storyId);
+    await user.save();
+    
     res.json({ success: true, message: 'Story deleted successfully' });
   } catch (err) {
     console.error(err);

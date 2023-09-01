@@ -14,15 +14,15 @@ const JWT_SECRET = 'my-@#$-key';
 // Route: Create a new user
 router.post('/createuser', upload.single('media'), [
   // Request body validation using express-validator
-  body('username', 'Enter a valid name').isLength({ min: 3 }),
-  body('fullname', 'Enter a valid name').isLength({ min: 3 }),
-  body('email').isEmail(),
-  body('password', 'Length should be 5 or more').isLength({ min: 5 })
+  body('username', 'Enter a valid Username of length 3 or more').isLength({ min: 3 }),
+  body('fullname', 'Enter a valid Fullname of length 3 or more').isLength({ min: 3 }),
+  body('email', 'Enter a valid Email').isEmail(),
+  body('password', 'Password length should be 5 or more').isLength({ min: 5 })
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json({ error: errors.array()[0].msg });
     }
 
     // Check if the user already exists with the given username or email
@@ -130,16 +130,21 @@ router.get('/getuser', auth, async (req, res) => {
 });
 
 // Route: Update user details
-router.put('/updateuser', auth, upload.single('media'),
-async (req, res) => {
+router.put('/updateuser', auth, upload.single('media'), async (req, res) => {
   try {
     const { username, fullname, email } = req.body;
     const userId = req.user.id;
 
-    let user = await User.findById(userId);
+    // Check if the user is the owner of the profile being updated
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if the user is updating their own profile
+    if (user._id.toString() !== userId) {
+      return res.status(403).json({ error: 'Unauthorized access' });
     }
 
     user.username = username;
@@ -156,9 +161,9 @@ async (req, res) => {
 
       // Update the user's image
       user.image = req.file.path;
-    }  
+    }
 
-    user = await user.save();
+    await user.save();
 
     res.json(user);
   } catch (err) {
@@ -181,10 +186,16 @@ router.put('/changepassword', auth, [
     const { oldPassword, newPassword } = req.body;
     const userId = req.user.id;
 
-    let user = await User.findById(userId);
+    // Check if the user is the owner of the profile
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Check if the user is changing their own password
+    if (user._id.toString() !== userId) {
+      return res.status(403).json({ error: 'Unauthorized access' });
     }
 
     const isMatch = await bcrypt.compare(oldPassword, user.password);
@@ -198,7 +209,7 @@ router.put('/changepassword', auth, [
 
     user.password = hashedPassword;
 
-    user = await user.save();
+    await user.save();
 
     res.json({ message: 'Password changed successfully' });
   } catch (err) {
@@ -206,6 +217,7 @@ router.put('/changepassword', auth, [
     res.status(500).send('Internal Server Error');
   }
 });
+
 
 // Route: Get all users
 router.get('/getallusers', async (req, res) => {
@@ -224,12 +236,20 @@ router.delete('/deleteuser', auth, async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // Find the user by ID and remove it from the database
-    const user = await User.findByIdAndRemove(userId);
+    // Check if the user is the owner of the profile being deleted
+    const user = await User.findById(userId);
 
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
+
+    // Check if the user is deleting their own profile
+    if (user._id.toString() !== userId) {
+      return res.status(403).json({ error: 'Unauthorized access' });
+    }
+
+    // Find the user by ID and remove it from the database
+    await User.findByIdAndRemove(userId);
 
     res.json({ message: 'User deleted successfully' });
   } catch (err) {
