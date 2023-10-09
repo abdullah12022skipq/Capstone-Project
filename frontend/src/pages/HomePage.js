@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import PostShowBox from "../components/Post/PostShowBox";
 import PostUpload from "../components/PostUpload";
 import Sidebar from "../components/Sidebar"
+import Post from '../components/Post/Post';
 
 const Home = () => {
   useEffect(() => {
@@ -12,7 +12,7 @@ const Home = () => {
       <div>
         <Sidebar />
         <PostUpload />
-        <PostShowBox />
+        <Post />
       </div>
   );
 };

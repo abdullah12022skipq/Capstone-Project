@@ -22,7 +22,7 @@ const LogoutButton = () => {
       onClick={handleLogout}
     >
       <FiLogOut className="text-xl mr-2" />
-      <span className="hidden sm:block">Logout</span>
+      <span className="text-xl hidden sm:block">Logout</span>
     </button>
   );
 };

@@ -7,12 +7,12 @@ const auth = require('../middleware/fetchuser');
 const multer = require('multer');
 const storage = require('../middleware/fetchmedia');
 
-const upload = multer({ storage: storage('uploads/profile') });
+const upload = multer({ storage: storage('uploads') });
 const router = express.Router();
 const JWT_SECRET = 'my-@#$-key';
 
 // Route: Create a new user
-router.post('/createuser', upload.single('media'), [
+router.post('/createuser', upload.single('profile'), [
   // Request body validation using express-validator
   body('username', 'Enter a valid Username of length 3 or more').isLength({ min: 3 }),
   body('fullname', 'Enter a valid Fullname of length 3 or more').isLength({ min: 3 }),
@@ -67,7 +67,7 @@ router.post('/createuser', upload.single('media'), [
     };
 
     const authToken = jwt.sign(payload, JWT_SECRET);
-    res.json(authToken);
+    res.json({ authToken, user });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Internal Server Error');
@@ -110,7 +110,7 @@ router.post('/loginuser', [
     };
 
     const authToken = jwt.sign(payload, JWT_SECRET);
-    res.json(authToken);
+    res.json({ authToken, user });
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Internal Server Error');
@@ -130,7 +130,7 @@ router.get('/getuser', auth, async (req, res) => {
 });
 
 // Route: Update user details
-router.put('/updateuser', auth, upload.single('media'), async (req, res) => {
+router.put('/updateuser', auth, upload.single('profile'), async (req, res) => {
   try {
     const { username, fullname, email } = req.body;
     const userId = req.user.id;

@@ -5,7 +5,7 @@ import image from '../assets/homepage.webp';
 
 const LandingPage = () => {
   return (
-    <div className='h-screen'>
+    <div className='h-screen bg-white'>
       <div className='ml-24 py-4 px-6'>
         <nav className="flex justify-between py-2 px-4">
           <img src={logo} alt="Logo" className="h-15 rounded-full" />

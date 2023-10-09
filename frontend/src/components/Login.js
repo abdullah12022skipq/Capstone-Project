@@ -22,9 +22,8 @@ export default function Login(){
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const user = await dispatch(loginUser(loginState));
-        if (user.payload) {
-          localStorage.setItem('token', user.payload);
+        const response = await dispatch(loginUser(loginState));
+        if (response) {
           navigate('/home', { replace: true });
         }
       };

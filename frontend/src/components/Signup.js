@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { signupFields as fields } from "../constants/formFields";
 import FormAction from "./Form/FormAction";
 import Input from "./Form/Input";
 import { registerUser } from '../redux/User/userSlice'
 import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate } from 'react-router-dom';
+import { UserContext } from "./UserContext";
 
 
 let fieldsState = {};
@@ -13,6 +14,7 @@ const Signup = () => {
     const { error } = useSelector(state=>state.user)
     const dispatch = useDispatch()
     const navigate = useNavigate()
+    const { updateUser } = useContext(UserContext)
 
     const [signupState, setSignupState] = useState(fieldsState);
     const handleChange = (e) => {
@@ -24,10 +26,10 @@ const Signup = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const user = await dispatch(registerUser(signupState));
-        if (user.payload) {
-          localStorage.setItem('token', user.payload);
-          navigate('/home', { replace: true });
+        const response = await dispatch(registerUser(signupState));
+        if (response) {
+            updateUser(response.payload)
+            navigate('/home', { replace: true });
         }
       };
 

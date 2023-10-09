@@ -16,7 +16,14 @@ const login_api = axios.create({
 
 export const loginUser = createAsyncThunk('user/loginUser', (loginFields) => {
   return login_api.post('/auth/loginuser', loginFields)
-    .then((response) => response.data)
+    .then((response) => {
+      const { authToken, user } = response.data;
+      // Save the JWT token to local storage
+      localStorage.setItem('token', authToken);
+      // Return the user data
+      user['profileUrl'] = `http://localhost:5000/${user.image}`;
+      return user;
+    })
     .catch((error) => {
       if (error.response.status === 400) {
         throw new Error(error.response.data.error); // Throw an error with the specific error message
@@ -37,12 +44,17 @@ export const registerUser = createAsyncThunk(
         if (key !== 'profilePicture') {
           formData.append(key, signupFields[key]);
         } else {
-          formData.append('media', signupFields[key], signupFields.profilePicture.name);
+          formData.append('profile', signupFields[key], signupFields.profilePicture.name);
         }
       });
       
       const response = await axios.post('http://localhost:5000/api/auth/createuser', formData);
-      return response.data;
+      const { authToken, user } = response.data;
+      localStorage.setItem('token', authToken);
+      // Return the user data
+      user['profileUrl'] = `http://localhost:5000/${user.image}`;
+      return user;
+
     } catch (error) {
       return rejectWithValue(error.response.data.error);
     }

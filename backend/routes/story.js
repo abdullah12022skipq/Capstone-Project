@@ -9,13 +9,13 @@ const Like = require('../models/Like')
 const multer = require('multer');
 const storage = require('../middleware/fetchmedia');
 
-const upload = multer({ storage: storage('uploads/stories') });
+const upload = multer({ storage: storage('uploads') });
 
 // Create a new story
 router.post(
   '/stories',
   auth,
-  upload.single('media'),
+  upload.single('story'),
   [
     body('text').optional().trim(),
   ],
@@ -118,7 +118,7 @@ router.get('/stories/:storyId', async (req, res) => {
 
 
 // Update a specific story
-router.put('/stories/:storyId', auth, upload.single('media'), async (req, res) => {
+router.put('/stories/:storyId', auth, upload.single('story'), async (req, res) => {
   try {
     const { storyId } = req.params;
     const { text } = req.body;
