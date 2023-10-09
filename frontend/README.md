@@ -1,24 +1,24 @@
-##Digital Media App - Frontend
+## Digital Media App - Frontend
 
 **This is the frontend repository for the Digital Media App. All the UI is designed in React. The frontend is responsible for user friendly UI or how a user interacts with the app**
 
 * Getting Started
-        Prerequisites
-        Installation
+    * Prerequisites
+    * Installation
 * Features
 * Usage
 * Contributing
 * License
 
-##Getting Started
-###Prerequisites
+## Getting Started
+### Prerequisites
 
 Before you begin, ensure you have met the following requirements:
 
 * Node.js and npm installed on your development environment.
 * A compatible web browser (e.g., Chrome, Firefox, Safari).
 
-###Installation
+### Installation
 
 1. Clone the repository to your local machine:
 	git clone https://github.com/your-username/Capstone-Project.git
@@ -35,7 +35,7 @@ Before you begin, ensure you have met the following requirements:
 This will launch the app in your default web browser. If it doesn't, open your browser and navigate to http://localhost:3000.
 But first you have to run the backend for interacting. Go to the Backend folder and check ReadMe file
 
-##Features
+## Features
 
 * **User Authentication:** Users can sign up and log in to the app to create and manage their profiles.
 * **Post Creation:** Users can create posts containing images, videos, or text.
@@ -45,7 +45,7 @@ But first you have to run the backend for interacting. Go to the Backend folder 
 * **Responsive Design:** The app is designed to work seamlessly on both desktop and mobile devices.
 * **Protected Routes:** Certain routes, such as creating a post, are protected and require authentication.
 
-#Usage
+# Usage
 
 1. **Sign Up:** Start by signing up for an account if you're a new user.
 2. **Log In:** If you already have an account, log in using your credentials.
@@ -55,7 +55,7 @@ But first you have to run the backend for interacting. Go to the Backend folder 
 6. **Post Ranking:** You can view top 10 most liked, disliked or commented posts
 7. **User Ranking:** You can view top 10 most interacted account
 
-##Contributing
+## Contributing
 
 We welcome contributions from the community. If you'd like to contribute to this project, please follow these guidelines:
 
